@@ -108,3 +108,18 @@ a:hover {
   font-family: 'Courier New', monospace;
   color: #333;
 }
+
+.download-row {
+  display: flex;
+  gap: 1rem;
+  margin-top: 1rem;
+}
+
+.secondary-button {
+  border: 1px solid var(--brand-main);
+  background: transparent;
+  color: var(--brand-main);
+  border-radius: 14px;
+  padding: 0.9rem 1.35rem;
+  cursor: pointer;
+}
