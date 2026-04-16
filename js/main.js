@@ -147,7 +147,9 @@ form.addEventListener("input", () => {
 
 qrType.addEventListener("change", () => {
   renderFields(qrType.value);
-  generateQrCode();
+  setTimeout(() => {
+    generateQrCode();
+  }, 0);
 });
 
 logoUpload.addEventListener("change", (e) => {
