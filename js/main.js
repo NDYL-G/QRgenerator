@@ -127,8 +127,11 @@ const mainColour = document.getElementById("main-colour");
 const mainColourText = document.getElementById("main-colour-text");
 const gradientColour = document.getElementById("gradient-colour");
 const gradientColourText = document.getElementById("gradient-colour-text");
+const errorCorrection = document.getElementById("error-correction");
 const qrPreview = document.getElementById("qr-preview");
 const qrDataPreview = document.getElementById("qr-data-preview");
+const downloadPngButton = document.getElementById("download-png");
+const downloadSvgButton = document.getElementById("download-svg");
 
 let uploadedLogoData = null;
 
@@ -138,6 +141,7 @@ const qrCode = new QRCodeStyling({
   type: "svg",
   data: DEFAULT_URL,
   image: DEFAULT_LOGO,
+  margin: 12,
   qrOptions: {
     errorCorrectionLevel: "H"
   },
@@ -150,17 +154,28 @@ const qrCode = new QRCodeStyling({
     type: "square",
     gradient: {
       type: "linear",
+      rotation: 0,
       colorStops: [
         { offset: 0, color: "#112557" },
         { offset: 1, color: "#fd9802" }
       ]
     }
+  },
+  cornersSquareOptions: {
+    type: "square",
+    color: "#112557"
+  },
+  cornersDotOptions: {
+    type: "square",
+    color: "#112557"
+  },
+  backgroundOptions: {
+    color: "#ffffff"
   }
 });
 
 qrCode.append(qrPreview);
 
-// -------- Dynamic Fields --------
 function createField(config) {
   const wrapper = document.createElement("div");
   wrapper.className = "form-row";
@@ -213,33 +228,35 @@ function createField(config) {
 function renderFields(type) {
   dynamicFields.innerHTML = "";
   const fields = fieldTemplates[type] || [];
-  fields.forEach((f) => dynamicFields.appendChild(createField(f)));
+  fields.forEach((field) => {
+    dynamicFields.appendChild(createField(field));
+  });
 }
 
-// -------- QR Data Builder --------
+function getFieldValue(id) {
+  const field = document.getElementById(id);
+  return field ? field.value.trim() : "";
+}
+
 function getData() {
   const type = qrType.value;
 
   if (type === "url") {
-    const field = document.getElementById("url-value");
-    return field && field.value.trim() ? field.value.trim() : DEFAULT_URL;
+    return getFieldValue("url-value") || DEFAULT_URL;
   }
 
   if (type === "text") {
-    const field = document.getElementById("text-value");
-    return field && field.value.trim() ? field.value.trim() : DEFAULT_URL;
+    return getFieldValue("text-value") || DEFAULT_URL;
   }
 
   if (type === "email") {
-    const emailField = document.getElementById("email-value");
-    const subjectField = document.getElementById("email-subject");
-    const bodyField = document.getElementById("email-body");
+    const email = getFieldValue("email-value");
+    const subject = encodeURIComponent(getFieldValue("email-subject"));
+    const body = encodeURIComponent(getFieldValue("email-body"));
 
-    const email = emailField ? emailField.value.trim() : "";
-    const subject = subjectField ? encodeURIComponent(subjectField.value.trim()) : "";
-    const body = bodyField ? encodeURIComponent(bodyField.value.trim()) : "";
-
-    if (!email) return DEFAULT_URL;
+    if (!email) {
+      return DEFAULT_URL;
+    }
 
     const query = [];
     if (subject) query.push(`subject=${subject}`);
@@ -249,47 +266,42 @@ function getData() {
   }
 
   if (type === "phone") {
-    const field = document.getElementById("phone-value");
-    const phone = field ? field.value.trim() : "";
+    const phone = getFieldValue("phone-value");
     return phone ? `tel:${phone}` : DEFAULT_URL;
   }
 
   if (type === "sms") {
-    const numberField = document.getElementById("sms-value");
-    const messageField = document.getElementById("sms-message");
+    const number = getFieldValue("sms-value");
+    const message = getFieldValue("sms-message");
 
-    const number = numberField ? numberField.value.trim() : "";
-    const message = messageField ? messageField.value.trim() : "";
-
-    if (!number) return DEFAULT_URL;
+    if (!number) {
+      return DEFAULT_URL;
+    }
 
     return message ? `SMSTO:${number}:${message}` : `SMSTO:${number}:`;
   }
 
   if (type === "wifi") {
-    const ssidField = document.getElementById("wifi-ssid");
-    const passwordField = document.getElementById("wifi-password");
+    const ssid = getFieldValue("wifi-ssid");
+    const password = getFieldValue("wifi-password");
     const encryptionField = document.getElementById("wifi-encryption");
-
-    const ssid = ssidField ? ssidField.value.trim() : "";
-    const password = passwordField ? passwordField.value.trim() : "";
     const encryption = encryptionField ? encryptionField.value : "WPA";
 
-    if (!ssid) return DEFAULT_URL;
+    if (!ssid) {
+      return DEFAULT_URL;
+    }
 
     return `WIFI:T:${encryption};S:${ssid};P:${password};;`;
   }
 
   if (type === "vcard") {
-    const nameField = document.getElementById("vcard-name");
-    const emailField = document.getElementById("vcard-email");
-    const phoneField = document.getElementById("vcard-phone");
+    const name = getFieldValue("vcard-name");
+    const email = getFieldValue("vcard-email");
+    const phone = getFieldValue("vcard-phone");
 
-    const name = nameField ? nameField.value.trim() : "";
-    const email = emailField ? emailField.value.trim() : "";
-    const phone = phoneField ? phoneField.value.trim() : "";
-
-    if (!name && !email && !phone) return DEFAULT_URL;
+    if (!name && !email && !phone) {
+      return DEFAULT_URL;
+    }
 
     return [
       "BEGIN:VCARD",
@@ -304,34 +316,50 @@ function getData() {
   return DEFAULT_URL;
 }
 
-// -------- Download Image --------
-document.getElementById("download-png").addEventListener("click", () => {
-  qrCode.download({
-    name: "qr-code",
-    extension: "png"
+function normaliseHex(value, fallback) {
+  const cleanValue = value.trim();
+  return /^#[0-9A-Fa-f]{6}$/.test(cleanValue) ? cleanValue : fallback;
+}
+
+function syncColourInputs(colourInput, textInput, fallback) {
+  colourInput.addEventListener("input", () => {
+    textInput.value = colourInput.value.toUpperCase();
+    generateQrCode();
   });
-});
 
-document.getElementById("download-svg").addEventListener("click", () => {
-  qrCode.download({
-    name: "qr-code",
-    extension: "svg"
+  textInput.addEventListener("input", () => {
+    if (/^#[0-9A-Fa-f]{6}$/.test(textInput.value.trim())) {
+      colourInput.value = textInput.value.trim();
+      textInput.value = textInput.value.trim().toUpperCase();
+      generateQrCode();
+    }
   });
-});
 
+  textInput.addEventListener("blur", () => {
+    const safeColour = normaliseHex(textInput.value, fallback);
+    colourInput.value = safeColour;
+    textInput.value = safeColour.toUpperCase();
+    generateQrCode();
+  });
+}
 
-// -------- Generate QR -------- NOT USED
 function generateQrCode() {
   const data = getData();
+  const main = normaliseHex(mainColour.value, "#112557");
+  const gradient = normaliseHex(gradientColour.value, "#fd9802");
 
-  const main = mainColour.value;
-  const gradient = gradientColour.value;
+  const selectedDotStyle =
+    document.querySelector('input[name="dot-style"]:checked')?.value || "square";
 
-  const dots = enableGradient.checked
+  const selectedCornerStyle =
+    document.querySelector('input[name="corner-style"]:checked')?.value || "square";
+
+  const dotsOptions = enableGradient.checked
     ? {
-        type: "square",
+        type: selectedDotStyle,
         gradient: {
           type: "linear",
+          rotation: 0,
           colorStops: [
             { offset: 0, color: main },
             { offset: 1, color: gradient }
@@ -339,14 +367,25 @@ function generateQrCode() {
         }
       }
     : {
-        type: "square",
+        type: selectedDotStyle,
         color: main
       };
 
   qrCode.update({
     data: data,
     image: includeLogo.checked ? (uploadedLogoData || DEFAULT_LOGO) : "",
-    dotsOptions: dots,
+    qrOptions: {
+      errorCorrectionLevel: errorCorrection.value
+    },
+    dotsOptions: dotsOptions,
+    cornersSquareOptions: {
+      type: selectedCornerStyle,
+      color: main
+    },
+    cornersDotOptions: {
+      type: selectedCornerStyle,
+      color: main
+    },
     imageOptions: {
       hideBackgroundDots: true,
       imageSize: parseFloat(logoSize.value),
@@ -359,14 +398,10 @@ function generateQrCode() {
   }
 }
 
-// -------- Events --------
-form.addEventListener("submit", (e) => {
-  e.preventDefault();
-  generateQrCode();
-});
-
-form.addEventListener("input", () => {
-  logoSizeValue.textContent = logoSize.value;
+form.addEventListener("input", (event) => {
+  if (event.target.id === "logo-size") {
+    logoSizeValue.textContent = Number(logoSize.value).toFixed(2);
+  }
   generateQrCode();
 });
 
@@ -375,8 +410,9 @@ qrType.addEventListener("change", () => {
   generateQrCode();
 });
 
-logoUpload.addEventListener("change", (e) => {
-  const file = e.target.files[0];
+logoUpload.addEventListener("change", (event) => {
+  const file = event.target.files[0];
+
   if (!file) {
     uploadedLogoData = null;
     generateQrCode();
@@ -391,6 +427,27 @@ logoUpload.addEventListener("change", (e) => {
   reader.readAsDataURL(file);
 });
 
-// -------- Init --------
+if (downloadPngButton) {
+  downloadPngButton.addEventListener("click", () => {
+    qrCode.download({
+      name: "qr-code",
+      extension: "png"
+    });
+  });
+}
+
+if (downloadSvgButton) {
+  downloadSvgButton.addEventListener("click", () => {
+    qrCode.download({
+      name: "qr-code",
+      extension: "svg"
+    });
+  });
+}
+
+syncColourInputs(mainColour, mainColourText, "#112557");
+syncColourInputs(gradientColour, gradientColourText, "#fd9802");
+
 renderFields("url");
+logoSizeValue.textContent = Number(logoSize.value).toFixed(2);
 generateQrCode();
