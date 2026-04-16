@@ -91,13 +91,86 @@ function getData() {
   const type = qrType.value;
 
   if (type === "url") {
-    const urlField = document.getElementById("url-value");
-    return urlField ? (urlField.value || DEFAULT_URL) : DEFAULT_URL;
+    const field = document.getElementById("url-value");
+    return field && field.value.trim() ? field.value.trim() : DEFAULT_URL;
   }
 
   if (type === "text") {
-    const textField = document.getElementById("text-value");
-    return textField ? (textField.value || DEFAULT_URL) : DEFAULT_URL;
+    const field = document.getElementById("text-value");
+    return field && field.value.trim() ? field.value.trim() : DEFAULT_URL;
+  }
+
+  if (type === "email") {
+    const emailField = document.getElementById("email-value");
+    const subjectField = document.getElementById("email-subject");
+    const bodyField = document.getElementById("email-body");
+
+    const email = emailField ? emailField.value.trim() : "";
+    const subject = subjectField ? encodeURIComponent(subjectField.value.trim()) : "";
+    const body = bodyField ? encodeURIComponent(bodyField.value.trim()) : "";
+
+    if (!email) return DEFAULT_URL;
+
+    let query = [];
+    if (subject) query.push(`subject=${subject}`);
+    if (body) query.push(`body=${body}`);
+
+    return `mailto:${email}${query.length ? "?" + query.join("&") : ""}`;
+  }
+
+  if (type === "phone") {
+    const field = document.getElementById("phone-value");
+    const phone = field ? field.value.trim() : "";
+    return phone ? `tel:${phone}` : DEFAULT_URL;
+  }
+
+  if (type === "sms") {
+    const numberField = document.getElementById("sms-value");
+    const messageField = document.getElementById("sms-message");
+
+    const number = numberField ? numberField.value.trim() : "";
+    const message = messageField ? messageField.value.trim() : "";
+
+    if (!number) return DEFAULT_URL;
+
+    return message
+      ? `SMSTO:${number}:${message}`
+      : `SMSTO:${number}:`;
+  }
+
+  if (type === "wifi") {
+    const ssidField = document.getElementById("wifi-ssid");
+    const passwordField = document.getElementById("wifi-password");
+    const encryptionField = document.getElementById("wifi-encryption");
+
+    const ssid = ssidField ? ssidField.value.trim() : "";
+    const password = passwordField ? passwordField.value.trim() : "";
+    const encryption = encryptionField ? encryptionField.value : "WPA";
+
+    if (!ssid) return DEFAULT_URL;
+
+    return `WIFI:T:${encryption};S:${ssid};P:${password};;`;
+  }
+
+  if (type === "vcard") {
+    const nameField = document.getElementById("vcard-name");
+    const emailField = document.getElementById("vcard-email");
+    const phoneField = document.getElementById("vcard-phone");
+
+    const name = nameField ? nameField.value.trim() : "";
+    const email = emailField ? emailField.value.trim() : "";
+    const phone = phoneField ? phoneField.value.trim() : "";
+
+    if (!name && !email && !phone) return DEFAULT_URL;
+
+    return [
+      "BEGIN:VCARD",
+      "VERSION:3.0",
+      `FN:${name}`,
+      email ? `EMAIL:${email}` : "",
+      phone ? `TEL:${phone}` : "",
+      "END:VCARD"
+    ].filter(Boolean).join("\\n");
   }
 
   return DEFAULT_URL;
