@@ -304,7 +304,23 @@ function getData() {
   return DEFAULT_URL;
 }
 
-// -------- Generate QR --------
+// -------- Download Image --------
+document.getElementById("download-png").addEventListener("click", () => {
+  qrCode.download({
+    name: "qr-code",
+    extension: "png"
+  });
+});
+
+document.getElementById("download-svg").addEventListener("click", () => {
+  qrCode.download({
+    name: "qr-code",
+    extension: "svg"
+  });
+});
+
+
+// -------- Generate QR -------- NOT USED
 function generateQrCode() {
   const data = getData();
 
