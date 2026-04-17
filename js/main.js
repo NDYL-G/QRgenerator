@@ -1,6 +1,6 @@
 const DEFAULT_URL = "https://qrgenerator.ndyl.uk";
 const DEFAULT_LOGO = "img/logo.png";
-const DEFAULT_LOGO_SIZE = 0.50;
+const DEFAULT_LOGO_SIZE = 0.45;
 
 const fieldTemplates = {
   url: [
@@ -231,6 +231,7 @@ function createField(config) {
 }
 
 function renderFields(type) {
+  if (!dynamicFields) return;
   dynamicFields.innerHTML = "";
   const fields = fieldTemplates[type] || [];
   fields.forEach((field) => {
@@ -244,7 +245,7 @@ function getFieldValue(id) {
 }
 
 function getData() {
-  const type = qrType.value;
+  const type = qrType ? qrType.value : "url";
 
   if (type === "url") {
     return getFieldValue("url-value") || DEFAULT_URL;
@@ -259,9 +260,7 @@ function getData() {
     const subject = encodeURIComponent(getFieldValue("email-subject"));
     const body = encodeURIComponent(getFieldValue("email-body"));
 
-    if (!email) {
-      return DEFAULT_URL;
-    }
+    if (!email) return DEFAULT_URL;
 
     const query = [];
     if (subject) query.push(`subject=${subject}`);
@@ -279,9 +278,7 @@ function getData() {
     const number = getFieldValue("sms-value");
     const message = getFieldValue("sms-message");
 
-    if (!number) {
-      return DEFAULT_URL;
-    }
+    if (!number) return DEFAULT_URL;
 
     return message ? `SMSTO:${number}:${message}` : `SMSTO:${number}:`;
   }
@@ -292,9 +289,7 @@ function getData() {
     const encryptionField = document.getElementById("wifi-encryption");
     const encryption = encryptionField ? encryptionField.value : "WPA";
 
-    if (!ssid) {
-      return DEFAULT_URL;
-    }
+    if (!ssid) return DEFAULT_URL;
 
     return `WIFI:T:${encryption};S:${ssid};P:${password};;`;
   }
@@ -304,9 +299,7 @@ function getData() {
     const email = getFieldValue("vcard-email");
     const phone = getFieldValue("vcard-phone");
 
-    if (!name && !email && !phone) {
-      return DEFAULT_URL;
-    }
+    if (!name && !email && !phone) return DEFAULT_URL;
 
     return [
       "BEGIN:VCARD",
@@ -322,11 +315,14 @@ function getData() {
 }
 
 function normaliseHex(value, fallback) {
+  if (!value) return fallback;
   const cleanValue = value.trim();
   return /^#[0-9A-Fa-f]{6}$/.test(cleanValue) ? cleanValue : fallback;
 }
 
 function syncColourInputs(colourInput, textInput, fallback) {
+  if (!colourInput || !textInput) return;
+
   colourInput.addEventListener("input", () => {
     textInput.value = colourInput.value.toUpperCase();
     generateQrCode();
@@ -370,33 +366,60 @@ function getCornerTypes(selectedCornerStyle) {
 }
 
 function updateLogoUi() {
-  includeLogoToggle.classList.toggle("is-active", includeLogo);
-  includeLogoToggle.setAttribute("aria-pressed", String(includeLogo));
+  if (includeLogoToggle) {
+    includeLogoToggle.classList.toggle("is-active", includeLogo);
+    includeLogoToggle.setAttribute("aria-pressed", String(includeLogo));
+  }
+
+  if (!uploadControl || !logoUpload) return;
 
   if (includeLogo) {
     uploadControl.classList.remove("is-disabled");
     logoUpload.disabled = false;
-    logoUploadLabel.setAttribute("for", "logo-upload");
 
-    if (logoUpload.files && logoUpload.files.length > 0) {
-      logoFileName.textContent = logoUpload.files[0].name;
-    } else if (uploadedLogoData) {
-      logoFileName.textContent = "Uploaded logo";
-    } else {
-      logoFileName.textContent = "Default logo";
+    if (logoUploadLabel) {
+      logoUploadLabel.setAttribute("for", "logo-upload");
+    }
+
+    if (logoFileName) {
+      if (logoUpload.files && logoUpload.files.length > 0) {
+        logoFileName.textContent = logoUpload.files[0].name;
+      } else if (uploadedLogoData) {
+        logoFileName.textContent = "Uploaded logo";
+      } else {
+        logoFileName.textContent = "Default logo";
+      }
     }
   } else {
     uploadControl.classList.add("is-disabled");
     logoUpload.disabled = true;
-    logoUploadLabel.removeAttribute("for");
-    logoFileName.textContent = "Logo disabled";
+
+    if (logoUploadLabel) {
+      logoUploadLabel.removeAttribute("for");
+    }
+
+    if (logoFileName) {
+      logoFileName.textContent = "Logo disabled";
+    }
   }
+}
+
+function updateGradientUi() {
+  if (!gradientColour || !gradientColourText) return;
+
+  const gradientEnabled = enableGradient ? enableGradient.checked : true;
+
+  gradientColour.disabled = !gradientEnabled;
+  gradientColourText.disabled = !gradientEnabled;
+
+  gradientColour.classList.toggle("is-disabled", !gradientEnabled);
+  gradientColourText.classList.toggle("is-disabled", !gradientEnabled);
 }
 
 function generateQrCode() {
   const data = getData();
-  const main = normaliseHex(mainColour.value, "#112557");
-  const gradient = normaliseHex(gradientColour.value, "#fd9802");
+  const main = normaliseHex(mainColour ? mainColour.value : "#112557", "#112557");
+  const gradient = normaliseHex(gradientColour ? gradientColour.value : "#fd9802", "#fd9802");
 
   const selectedDotStyle =
     document.querySelector('input[name="dot-style"]:checked')?.value || "square";
@@ -405,8 +428,9 @@ function generateQrCode() {
     document.querySelector('input[name="corner-style"]:checked')?.value || "square";
 
   const cornerTypes = getCornerTypes(selectedCornerStyle);
+  const gradientEnabled = enableGradient ? enableGradient.checked : true;
 
-  const dotsOptions = enableGradient.checked
+  const dotsOptions = gradientEnabled
     ? {
         type: selectedDotStyle,
         gradient: {
@@ -427,7 +451,7 @@ function generateQrCode() {
     data: data,
     image: includeLogo ? (uploadedLogoData || DEFAULT_LOGO) : "",
     qrOptions: {
-      errorCorrectionLevel: errorCorrection.value
+      errorCorrectionLevel: errorCorrection ? errorCorrection.value : "H"
     },
     dotsOptions: dotsOptions,
     cornersSquareOptions: {
@@ -440,7 +464,7 @@ function generateQrCode() {
     },
     imageOptions: {
       hideBackgroundDots: true,
-      imageSize: parseFloat(logoSize.value),
+      imageSize: parseFloat(logoSize ? logoSize.value : DEFAULT_LOGO_SIZE),
       margin: 4
     }
   });
@@ -450,42 +474,63 @@ function generateQrCode() {
   }
 }
 
-form.addEventListener("input", (event) => {
-  if (event.target.id === "logo-size") {
-    logoSizeValue.textContent = Number(logoSize.value).toFixed(2);
-  }
-  generateQrCode();
-});
+if (form) {
+  form.addEventListener("input", (event) => {
+    if (event.target.id === "logo-size" && logoSize && logoSizeValue) {
+      logoSizeValue.textContent = Number(logoSize.value).toFixed(2);
+    }
 
-qrType.addEventListener("change", () => {
-  renderFields(qrType.value);
-  generateQrCode();
-});
+    if (event.target.id === "enable-gradient") {
+      updateGradientUi();
+    }
 
-includeLogoToggle.addEventListener("click", () => {
-  includeLogo = !includeLogo;
-  updateLogoUi();
-  generateQrCode();
-});
+    generateQrCode();
+  });
 
-logoUpload.addEventListener("change", (event) => {
-  const file = event.target.files[0];
+  form.addEventListener("change", (event) => {
+    if (event.target.id === "enable-gradient") {
+      updateGradientUi();
+    }
 
-  if (!file) {
-    uploadedLogoData = null;
+    generateQrCode();
+  });
+}
+
+if (qrType) {
+  qrType.addEventListener("change", () => {
+    renderFields(qrType.value);
+    generateQrCode();
+  });
+}
+
+if (includeLogoToggle) {
+  includeLogoToggle.addEventListener("click", () => {
+    includeLogo = !includeLogo;
     updateLogoUi();
     generateQrCode();
-    return;
-  }
+  });
+}
 
-  const reader = new FileReader();
-  reader.onload = () => {
-    uploadedLogoData = reader.result;
-    updateLogoUi();
-    generateQrCode();
-  };
-  reader.readAsDataURL(file);
-});
+if (logoUpload) {
+  logoUpload.addEventListener("change", (event) => {
+    const file = event.target.files[0];
+
+    if (!file) {
+      uploadedLogoData = null;
+      updateLogoUi();
+      generateQrCode();
+      return;
+    }
+
+    const reader = new FileReader();
+    reader.onload = () => {
+      uploadedLogoData = reader.result;
+      updateLogoUi();
+      generateQrCode();
+    };
+    reader.readAsDataURL(file);
+  });
+}
 
 if (downloadPngButton) {
   downloadPngButton.addEventListener("click", () => {
@@ -509,7 +554,15 @@ syncColourInputs(mainColour, mainColourText, "#112557");
 syncColourInputs(gradientColour, gradientColourText, "#fd9802");
 
 renderFields("url");
-logoSize.value = DEFAULT_LOGO_SIZE.toFixed(2);
-logoSizeValue.textContent = Number(logoSize.value).toFixed(2);
+
+if (logoSize) {
+  logoSize.value = DEFAULT_LOGO_SIZE.toFixed(2);
+}
+
+if (logoSizeValue && logoSize) {
+  logoSizeValue.textContent = Number(logoSize.value).toFixed(2);
+}
+
 updateLogoUi();
+updateGradientUi();
 generateQrCode();
