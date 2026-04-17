@@ -1,6 +1,6 @@
 const DEFAULT_URL = "https://qrgenerator.ndyl.uk";
 const DEFAULT_LOGO = "img/logo.png";
-const DEFAULT_LOGO_SIZE = 0.45;
+const DEFAULT_LOGO_SIZE = 0.50;
 
 const fieldTemplates = {
   url: [
