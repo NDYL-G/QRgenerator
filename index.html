@@ -7,157 +7,136 @@
   <link rel="icon" href="img/favicon.ico" type="image/x-icon" />
   <link rel="stylesheet" href="css/style.css" />
 </head>
-
 <body>
-  <header class="site-header">
-    <div class="branding">
-      <img src="img/logo.svg" alt="QR Generator logo" onerror="this.src='img/logo.png'" class="logo" />
-      <div>
-        <h1>QR Code Generator</h1>
-        <p>Create a styled QR code with your own content, colours and logo.</p>
+  <main class="dashboard-layout">
+
+    <section class="panel panel-branding">
+      <div class="branding">
+        <img src="img/logo.svg" alt="QR Generator logo" onerror="this.src='img/logo.png'" class="logo" />
+        <div class="branding-text">
+          <h1>QR Code Generator</h1>
+          <p>Create a styled QR code with your own content, colours and logo.</p>
+        </div>
       </div>
-    </div>
-  </header>
+    </section>
 
-  <main class="page-layout">
+    <section class="panel panel-instructions">
+      <h2>How it works</h2>
+      <ol>
+        <li>Select the QR code type.</li>
+        <li>Enter the required details.</li>
+        <li>Choose the QR code style and error correction.</li>
+        <li>Adjust the main colour and gradient colour.</li>
+        <li>Choose whether to include a logo.</li>
+        <li>Adjust the logo size if needed.</li>
+        <li>Download the QR code when you are happy with it.</li>
+      </ol>
+    </section>
 
-    <!-- LEFT SIDE -->
-    <section class="left-panel">
+    <section class="panel panel-options">
+      <h2>QR code options</h2>
 
-      <!-- Instructions -->
-      <section class="instructions-panel">
-        <h2>How it works</h2>
-        <ol>
-          <li>Select the QR code type.</li>
-          <li>Enter the required details.</li>
-          <li>Choose the QR code style and error correction.</li>
-          <li>Adjust the main colour and gradient colour.</li>
-          <li>Choose whether to include a logo.</li>
-          <li>Adjust the logo size if needed.</li>
-        </ol>
-      </section>
+      <form id="qr-form" novalidate>
 
-      <!-- Controls -->
-      <section class="controls-panel">
-        <h2>QR code options</h2>
+        <div class="form-row">
+          <label for="qr-type">QR code type</label>
+          <select id="qr-type">
+            <option value="url" selected>URL</option>
+            <option value="text">Text</option>
+            <option value="email">Email</option>
+            <option value="phone">Phone</option>
+            <option value="sms">SMS</option>
+            <option value="wifi">Wi-Fi</option>
+            <option value="vcard">vCard</option>
+          </select>
+        </div>
 
-        <form id="qr-form" novalidate>
+        <div id="dynamic-fields" class="dynamic-fields"></div>
 
-          <!-- QR TYPE -->
-          <div class="form-row">
-            <label for="qr-type">QR code type</label>
-            <select id="qr-type">
-              <option value="url" selected>URL</option>
-              <option value="text">Text</option>
-              <option value="email">Email</option>
-              <option value="phone">Phone</option>
-              <option value="sms">SMS</option>
-              <option value="wifi">Wi-Fi</option>
-              <option value="vcard">vCard</option>
-            </select>
-          </div>
-
-          <!-- DYNAMIC FIELDS -->
-          <div id="dynamic-fields" class="dynamic-fields"></div>
-
-          <!-- CORNER STYLE -->
-          <fieldset class="option-group">
-            <legend>Corner style</legend>
+        <fieldset class="option-group">
+          <legend>Corner style</legend>
+          <div class="radio-group">
             <label><input type="radio" name="corner-style" value="square" checked /> Square</label>
             <label><input type="radio" name="corner-style" value="dot" /> Dot</label>
             <label><input type="radio" name="corner-style" value="extra-rounded" /> Rounded</label>
-          </fieldset>
+          </div>
+        </fieldset>
 
-          <!-- DOT STYLE -->
-          <fieldset class="option-group">
-            <legend>Dot style</legend>
+        <fieldset class="option-group">
+          <legend>Dot style</legend>
+          <div class="radio-group">
             <label><input type="radio" name="dot-style" value="square" checked /> Square</label>
             <label><input type="radio" name="dot-style" value="dots" /> Dot</label>
             <label><input type="radio" name="dot-style" value="rounded" /> Rounded</label>
-          </fieldset>
-
-          <!-- ERROR CORRECTION -->
-          <div class="form-row">
-            <label for="error-correction">Error correction</label>
-            <select id="error-correction">
-              <option value="L">Low</option>
-              <option value="M">Medium</option>
-              <option value="Q">Quartile</option>
-              <option value="H" selected>High</option>
-            </select>
           </div>
+        </fieldset>
 
-          <!-- MAIN COLOUR -->
-          <div class="form-row">
-            <label>Main colour</label>
-            <div class="colour-input-wrap">
-              <input type="color" id="main-colour" value="#112557" />
-              <input type="text" id="main-colour-text" value="#112557" />
-            </div>
-          </div>
-
-          <!-- GRADIENT -->
-          <div class="form-row checkbox-row">
-            <label for="enable-gradient">Enable gradient</label>
-            <input type="checkbox" id="enable-gradient" checked />
-          </div>
-
-          <div class="form-row">
-            <label>Gradient colour</label>
-            <div class="colour-input-wrap">
-              <input type="color" id="gradient-colour" value="#fd9802" />
-              <input type="text" id="gradient-colour-text" value="#fd9802" />
-            </div>
-          </div>
-
-          <!-- LOGO -->
-          <div class="form-row checkbox-row">
-            <label for="include-logo">Include logo</label>
-            <input type="checkbox" id="include-logo" checked />
-          </div>
-
-          <div class="form-row">
-            <label for="logo-upload">Upload logo</label>
-            <input type="file" id="logo-upload" accept="image/*" />
-          </div>
-
-          <div class="form-row">
-            <label for="logo-size">
-              Logo size <span id="logo-size-value">0.35</span>
-            </label>
-            <input type="range" id="logo-size" min="0.15" max="0.50" step="0.01" value="0.35" />
-          </div>
-
-        </form>
-      </section>
-    </section>
-
-    <!-- RIGHT SIDE -->
-    <section class="right-panel">
-      <div class="preview-card">
-        <h2>Preview</h2>
-        <p class="preview-note">Updates automatically as you change settings</p>
-
-        <div id="qr-preview" class="qr-preview"></div>
-
-        <p id="qr-data-preview" class="qr-data-preview"></p>
-
-        <!-- DOWNLOAD -->
-        <div class="download-row">
-          <button id="download-png" class="primary-button">Download PNG</button>
-          <button id="download-svg" class="secondary-button">Download SVG</button>
+        <div class="form-row">
+          <label for="error-correction">Error correction</label>
+          <select id="error-correction">
+            <option value="L">Low</option>
+            <option value="M">Medium</option>
+            <option value="Q">Quartile</option>
+            <option value="H" selected>High</option>
+          </select>
         </div>
 
+        <div class="form-row">
+          <label for="main-colour">Main colour</label>
+          <div class="colour-input-wrap">
+            <input type="color" id="main-colour" value="#112557" />
+            <input type="text" id="main-colour-text" value="#112557" maxlength="7" />
+          </div>
+        </div>
+
+        <div class="form-row checkbox-row">
+          <label for="enable-gradient">Enable gradient</label>
+          <input type="checkbox" id="enable-gradient" checked />
+        </div>
+
+        <div class="form-row">
+          <label for="gradient-colour">Gradient colour</label>
+          <div class="colour-input-wrap">
+            <input type="color" id="gradient-colour" value="#fd9802" />
+            <input type="text" id="gradient-colour-text" value="#fd9802" maxlength="7" />
+          </div>
+        </div>
+
+        <div class="form-row checkbox-row">
+          <label for="include-logo">Include logo</label>
+          <input type="checkbox" id="include-logo" checked />
+        </div>
+
+        <div class="form-row">
+          <label for="logo-upload">Upload logo</label>
+          <input type="file" id="logo-upload" accept="image/*" />
+        </div>
+
+        <div class="form-row">
+          <label for="logo-size">Logo size <span id="logo-size-value">0.35</span></label>
+          <input type="range" id="logo-size" min="0.15" max="0.50" step="0.01" value="0.35" />
+        </div>
+
+      </form>
+    </section>
+
+    <section class="panel panel-preview">
+      <h2>Preview</h2>
+      <p class="preview-note">Updates automatically as you change settings.</p>
+
+      <div id="qr-preview" class="qr-preview"></div>
+
+      <p id="qr-data-preview" class="qr-data-preview"></p>
+
+      <div class="download-row">
+        <button id="download-png" class="primary-button" type="button">Download PNG</button>
+        <button id="download-svg" class="secondary-button" type="button">Download SVG</button>
       </div>
     </section>
 
   </main>
 
-  <!-- QR LIBRARY -->
   <script src="https://unpkg.com/qr-code-styling@1.9.2/lib/qr-code-styling.js"></script>
-
-  <!-- YOUR SCRIPT -->
   <script src="js/main.js"></script>
-
 </body>
 </html>
