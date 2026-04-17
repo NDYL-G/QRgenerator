@@ -1,5 +1,6 @@
 const DEFAULT_URL = "https://qrgenerator.ndyl.uk";
 const DEFAULT_LOGO = "img/logo.png";
+const DEFAULT_LOGO_SIZE = 0.45;
 
 const fieldTemplates = {
   url: [
@@ -119,8 +120,11 @@ const form = document.getElementById("qr-form");
 const qrType = document.getElementById("qr-type");
 const dynamicFields = document.getElementById("dynamic-fields");
 const enableGradient = document.getElementById("enable-gradient");
-const includeLogo = document.getElementById("include-logo");
+const includeLogoToggle = document.getElementById("include-logo-toggle");
 const logoUpload = document.getElementById("logo-upload");
+const logoUploadLabel = document.getElementById("logo-upload-label");
+const logoFileName = document.getElementById("logo-file-name");
+const uploadControl = document.getElementById("upload-control");
 const logoSize = document.getElementById("logo-size");
 const logoSizeValue = document.getElementById("logo-size-value");
 const mainColour = document.getElementById("main-colour");
@@ -134,6 +138,7 @@ const downloadPngButton = document.getElementById("download-png");
 const downloadSvgButton = document.getElementById("download-svg");
 
 let uploadedLogoData = null;
+let includeLogo = true;
 
 const qrCode = new QRCodeStyling({
   width: 300,
@@ -147,7 +152,7 @@ const qrCode = new QRCodeStyling({
   },
   imageOptions: {
     hideBackgroundDots: true,
-    imageSize: parseFloat(logoSize.value),
+    imageSize: DEFAULT_LOGO_SIZE,
     margin: 4
   },
   dotsOptions: {
@@ -364,6 +369,30 @@ function getCornerTypes(selectedCornerStyle) {
   };
 }
 
+function updateLogoUi() {
+  includeLogoToggle.classList.toggle("is-active", includeLogo);
+  includeLogoToggle.setAttribute("aria-pressed", String(includeLogo));
+
+  if (includeLogo) {
+    uploadControl.classList.remove("is-disabled");
+    logoUpload.disabled = false;
+    logoUploadLabel.setAttribute("for", "logo-upload");
+
+    if (logoUpload.files && logoUpload.files.length > 0) {
+      logoFileName.textContent = logoUpload.files[0].name;
+    } else if (uploadedLogoData) {
+      logoFileName.textContent = "Uploaded logo";
+    } else {
+      logoFileName.textContent = "Default logo";
+    }
+  } else {
+    uploadControl.classList.add("is-disabled");
+    logoUpload.disabled = true;
+    logoUploadLabel.removeAttribute("for");
+    logoFileName.textContent = "Logo disabled";
+  }
+}
+
 function generateQrCode() {
   const data = getData();
   const main = normaliseHex(mainColour.value, "#112557");
@@ -396,7 +425,7 @@ function generateQrCode() {
 
   qrCode.update({
     data: data,
-    image: includeLogo.checked ? (uploadedLogoData || DEFAULT_LOGO) : "",
+    image: includeLogo ? (uploadedLogoData || DEFAULT_LOGO) : "",
     qrOptions: {
       errorCorrectionLevel: errorCorrection.value
     },
@@ -433,11 +462,18 @@ qrType.addEventListener("change", () => {
   generateQrCode();
 });
 
+includeLogoToggle.addEventListener("click", () => {
+  includeLogo = !includeLogo;
+  updateLogoUi();
+  generateQrCode();
+});
+
 logoUpload.addEventListener("change", (event) => {
   const file = event.target.files[0];
 
   if (!file) {
     uploadedLogoData = null;
+    updateLogoUi();
     generateQrCode();
     return;
   }
@@ -445,6 +481,7 @@ logoUpload.addEventListener("change", (event) => {
   const reader = new FileReader();
   reader.onload = () => {
     uploadedLogoData = reader.result;
+    updateLogoUi();
     generateQrCode();
   };
   reader.readAsDataURL(file);
@@ -472,5 +509,7 @@ syncColourInputs(mainColour, mainColourText, "#112557");
 syncColourInputs(gradientColour, gradientColourText, "#fd9802");
 
 renderFields("url");
+logoSize.value = DEFAULT_LOGO_SIZE.toFixed(2);
 logoSizeValue.textContent = Number(logoSize.value).toFixed(2);
+updateLogoUi();
 generateQrCode();
