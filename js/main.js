@@ -433,6 +433,7 @@ function generateQrCode() {
   const dotsOptions = gradientEnabled
     ? {
         type: selectedDotStyle,
+        color: undefined,
         gradient: {
           type: "linear",
           rotation: 0,
@@ -444,7 +445,8 @@ function generateQrCode() {
       }
     : {
         type: selectedDotStyle,
-        color: main
+        color: main,
+        gradient: null
       };
 
   qrCode.update({
